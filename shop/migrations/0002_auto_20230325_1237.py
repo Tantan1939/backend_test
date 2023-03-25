@@ -1,0 +1,79 @@
+from django.db import migrations
+from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
+
+
+def populate_brand(apps, schema_editor):
+    Model = apps.get_model('shop', 'Brand')
+    Model.objects.create(brand_name='Brand Name 1',
+                         brand_code='bn1', logo='brand_logo.png')
+    Model.objects.create(brand_name='Brand Name 2',
+                         brand_code='bn2', logo='brand_logo.png')
+
+
+def populate_customer(apps, schema_editor):
+    Model = apps.get_model('shop', 'Customer')
+    brand_model = apps.get_model('shop', 'Brand')
+    customer_brand = apps.get_model('shop', 'customers_brand')
+    brand_obj = brand_model.objects.first()
+
+    for i in range(1, 6):
+        Model.objects.create(
+            first_name=f'Customer {i} Fname', last_name=f'Customer {i} Lname', Status='A')
+    else:
+        for customer in Model.objects.all():
+            customer_brand.objects.create(customer=customer, brand=brand_obj)
+
+
+def populate_product(apps, schema_editor):
+    Model = apps.get_model('shop', 'Product')
+    brand_model = apps.get_model('shop', 'Brand')
+    get_brand = brand_model.objects.first()
+
+    next_date = (datetime.today() + relativedelta(days=30)
+                 ).strftime("%Y-%m-%d")
+    make_next_billing_date = datetime.strptime(next_date, "%Y-%m-%d")
+
+    for i in range(1, 11):
+        # Add active products with next billing date set to 30 days from now.
+        Model.objects.create(currency='USD', price=500.15, description='Description of the product',
+                             brand=get_brand, previous_billing_date=date.today(), next_billing_date=make_next_billing_date, Status='A')
+
+    for j in range(1, 6):
+        # Add active and due products.
+        Model.objects.create(currency='USD', price=500.15, description='Description of the product',
+                             brand=get_brand, previous_billing_date=date.today(), next_billing_date=date.today(), Status='A')
+
+    for k in range(1, 3):
+        # Add Terminated and due products
+        Model.objects.create(currency='USD', price=500.15, description='Description of the product',
+                             brand=get_brand, previous_billing_date=date.today(), next_billing_date=date.today(), Status='T')
+
+    for k in range(1, 3):
+        # Add Terminated and not due products
+        Model.objects.create(currency='USD', price=500.15, description='Description of the product',
+                             brand=get_brand, previous_billing_date=date.today(), next_billing_date=make_next_billing_date, Status='T')
+
+
+def populate_invoice(apps, schema_editor):
+    invoice_model = apps.get_model('shop', 'Invoice')
+    product_model = apps.get_model('shop', 'Product')
+    customer_model = apps.get_model('shop', 'Customer')
+
+    for customer in customer_model.objects.all():
+        for product in product_model.objects.all():
+            invoice_model.objects.create(customer=customer, product=product)
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('shop', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(populate_brand),
+        migrations.RunPython(populate_customer),
+        migrations.RunPython(populate_product),
+        migrations.RunPython(populate_invoice),
+    ]

@@ -1,0 +1,48 @@
+CREATE SEQUENCE customernumber_seq;
+
+CREATE OR REPLACE FUNCTION generate_customernumber()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.customer_number := CONCAT('CUSTOMER', LPAD(NEXTVAL('customernumber_seq')::text, 5, '0'));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER customernumber_trigger
+BEFORE INSERT ON shop_customer
+FOR EACH ROW
+EXECUTE FUNCTION generate_customernumber();
+
+
+
+CREATE SEQUENCE productnumber_seq;
+
+CREATE OR REPLACE FUNCTION generate_productnumber()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.product_number := CONCAT('PRODUCT', LPAD(NEXTVAL('productnumber_seq')::text, 5, '0'));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER productnumber_trigger
+BEFORE INSERT ON shop_product
+FOR EACH ROW
+EXECUTE FUNCTION generate_productnumber();
+
+
+
+CREATE SEQUENCE invoicenumber_seq;
+
+CREATE OR REPLACE FUNCTION generate_invoicenumber()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.invoice_number := CONCAT('INVOICE', LPAD(NEXTVAL('invoicenumber_seq')::text, 5, '0'));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER invoicenumber_trigger
+BEFORE INSERT ON shop_invoice
+FOR EACH ROW
+EXECUTE FUNCTION generate_invoicenumber();
